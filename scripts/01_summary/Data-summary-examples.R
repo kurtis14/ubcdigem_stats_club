@@ -4,7 +4,7 @@
 # Load data stored in different formats
 # Overview of data, structure
 # Simple data cleaning, wrangling
-# Summarize - t-test, plot
+# Summarize - t-test, plots
 
 # Load packages -----------------------------------------------------------
 
@@ -42,7 +42,7 @@ gapminder <- read_csv('data/gapminder.csv')
 mtc <- read_rds('data/mtcars.RDS')
 
 
-### make your own dataset!
+### make your own datasets!
 my_df <- data.frame(nums = c(1:10),
                     letters = letters[1:10])
 
@@ -93,6 +93,9 @@ penguins <- penguins %>%
 penguins <- penguins %>% 
   mutate(species_island = str_c(species, island, sep = '_'))
 
+# add some random variation -- use later on with paired t-tests
+penguins <- penguins %>% 
+  mutate(bill_length_2 = bill_length_mm + rnorm(1))
 
 ### filter/subset data based on some column values
 
@@ -140,6 +143,11 @@ penguins_nomiss <- penguins %>%
 
 # T-tests -----------------------------------------------------------------
 
+### paired t test
+t.test(x = bill_length_mm, y = bill_length_2, data = penguins_nomiss, paired = T)
+t.test(penguins_nomiss$bill_length_mm, penguins$bill_length_2)
+
+### independent samples t test
 # does bill length differ by sex? 
 t.test(bill_length_mm ~ sex, data = penguins_nomiss)
 test_out <- t.test(bill_length_mm ~ sex, data = penguins_nomiss)
@@ -178,4 +186,44 @@ penguins_nomiss %>%
 
 # Visuals -----------------------------------------------------------------
 
+# base r examples
+plot(penguins$body_mass_g)
+plot(penguins$body_mass_g, penguins$bill_length_mm)
+hist(penguins$body_mass_g, breaks = 20)
 
+### ggplot
+# build up plots with layers, modify features
+ggplot(penguins)
+
+ggplot(penguins, aes(x = body_mass_g, y = bill_length_mm))
+
+p <- ggplot(penguins, aes(x = body_mass_g, y = bill_length_mm)) +
+  geom_point()
+p
+
+ggplot(penguins, aes(x = body_mass_g, y = bill_length_mm)) +
+  geom_point() +
+  geom_smooth(method = 'lm')
+
+ggplot(penguins, aes(x = body_mass_g, y = bill_length_mm, colour = species)) +
+  geom_point()
+
+ggplot(penguins, aes(x = body_mass_g, y = bill_length_mm, colour = species)) +
+  geom_point() +
+  facet_wrap(~ island)
+
+ggplot(penguins, aes(x = body_mass_g, y = bill_length_mm, colour = species)) +
+  geom_point() +
+  facet_wrap(~ island) +
+  theme_minimal() +
+  labs(title = 'Penguin body mass and bill length')
+
+ggplot(penguins, aes(x = body_mass_g, y = bill_length_mm, colour = species)) +
+  geom_point() +
+  facet_wrap(~ island) +
+  theme_minimal() +
+  labs(title = 'Penguin body mass and bill length') +
+  scale_color_brewer(type = 'qual')
+
+# write plot to file
+ggsave('outputs/penguin-plot.jpg', dpi = 300, width = 6, height = 4, units = 'in')
